@@ -45,7 +45,7 @@ class PrimeTest:
 
         # Trial division
         for p in self.__P:
-            if p * p >= n:
+            if p * p > n:
                 return True
             if n % p == 0:
                 return False
@@ -53,7 +53,7 @@ class PrimeTest:
         # Make new primes on the fly until sqrt
         while True:
             p = self.__next_prime()
-            if p * p >= n:
+            if p * p > n:
                 return True
             if n % p == 0:
                 return False
