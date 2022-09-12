@@ -1,5 +1,3 @@
-#!/usr/local/bin/python3
-
 # Let's see what other users are up to :-)
 # This scripts uses the Github, Gitlab and protohackers API to fetch
 # how many users used each language.
@@ -12,18 +10,22 @@ from collections import Counter
 from matplotlib import pyplot as plt
 
 
-with open('.env') as f:
-    for line in f:
-        try:
-            k, v = line.split('=')
-            os.environ[k.strip()] = v.strip()
-        except ValueError:
-            pass
+try:
+    with open('.env') as f:
+        for line in f:
+            try:
+                k, v = line.split('=')
+                os.environ[k.strip()] = v.strip()
+            except ValueError:
+                pass
+except:
+    pass
 
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", None)
+GITHUB_HEADERS = {'Authorization': f'Bearer {GITHUB_TOKEN}'} if GITHUB_TOKEN else {}
 
 def fetch_github(user, repo):
-    r = requests.get(f'https://api.github.com/repos/{user}/{repo}/languages',
-                     headers={'Authorization': f'Bearer {os.environ["GITHUB_KEY"]}'})
+    r = requests.get(f'https://api.github.com/repos/{user}/{repo}/languages', headers=GITHUB_HEADERS)
     if not r:
         return None
     m = max(r.json().items(), key=lambda u: u[1])
