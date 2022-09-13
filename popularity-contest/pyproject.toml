@@ -1,0 +1,16 @@
+[tool.poetry]
+authors = []
+description = "Generate language summarizes from protohackers.com users"
+name = "popularity-contest"
+version = "0.1.0"
+
+[tool.poetry.dependencies]
+matplotlib = "^3.5.3"
+python = "^3.10"
+requests = "^2.28.1"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0"]

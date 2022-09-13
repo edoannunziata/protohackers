@@ -1,0 +1,48 @@
+name: Update Popularity Contest
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    # https://crontab.guru/#0_*/3_*_*_*
+    # every three hours
+    - cron: "0 */3 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  generate-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Generate pie.png and output dir
+        run: |-
+          (
+            cd ./popularity-contest
+            poetry install
+            poetry run python popularity-contest.py
+            mkdir ./output
+            mv pie.png index.html ./output
+          )
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: ./popularity-contest/output
+
+      - name: Archive pie.png
+        uses: actions/upload-artifact@v3
+        with:
+          name: pie-${{ github.sha }}.png
+          path: ./popularity-contest/output/pie.png
