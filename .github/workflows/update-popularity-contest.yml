@@ -40,3 +40,9 @@ jobs:
         uses: JamesIves/github-pages-deploy-action@v4
         with:
           folder: ./popularity-contest/output
+
+      - name: Archive pie.png
+        uses: actions/upload-artifact@v3
+        with:
+          name: pie-${{ github.sha }}.png
+          path: ./popularity-contest/output/pie.png
