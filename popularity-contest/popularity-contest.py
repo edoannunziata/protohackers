@@ -22,7 +22,15 @@ except:
     pass
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", None)
-GITHUB_HEADERS = {'Authorization': f'Bearer {GITHUB_TOKEN}'} if GITHUB_TOKEN else {}
+
+BASE_HEADERS = { "User-Agent": "edoannunziata/protohackers - popularity-contest generating pie graph script" }
+GITHUB_HEADERS = {**BASE_HEADERS}
+
+if GITHUB_TOKEN is not None:
+    GITHUB_HEADERS = {
+        **GITHUB_HEADERS,
+        'Authorization': f'Bearer {GITHUB_TOKEN}'
+    }
 
 def fetch_github(user, repo):
     r = requests.get(f'https://api.github.com/repos/{user}/{repo}/languages', headers=GITHUB_HEADERS)
@@ -33,7 +41,7 @@ def fetch_github(user, repo):
 
 
 def fetch_gitlab(user, repo):
-    r = requests.get(f'https://gitlab.com/api/v4/projects/{user}%2f{repo}/languages')
+    r = requests.get(f'https://gitlab.com/api/v4/projects/{user}%2f{repo}/languages', headers=BASE_HEADERS)
     if not r:
         return None
     m = max(r.json().items(), key=lambda u: u[1])
@@ -67,7 +75,7 @@ def get_lang(user, url):
 
 def main():
     d = [
-        requests.get(f'https://api.protohackers.com/leaderboard/{n}').json()
+        requests.get(f'https://api.protohackers.com/leaderboard/{n}', headers=BASE_HEADERS).json()
         for n in range(3)
     ]
 
