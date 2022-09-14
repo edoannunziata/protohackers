@@ -1,5 +1,5 @@
 # Let's see what other users are up to :-)
-# This scripts uses the Github, Gitlab and protohackers API to fetch
+# This script uses the Github, Gitlab and protohackers APIs to fetch
 # how many users used each language.
 
 import requests
@@ -18,19 +18,20 @@ try:
                 os.environ[k.strip()] = v.strip()
             except ValueError:
                 pass
-except:
+except IOError:
     pass
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", None)
 
-BASE_HEADERS = { "User-Agent": "edoannunziata/protohackers - popularity-contest generating pie graph script" }
-GITHUB_HEADERS = {**BASE_HEADERS}
+BASE_HEADERS = {
+    "User-Agent": "edoannunziata/protohackers - popularity-contest generating pie graph script"
+}
 
-if GITHUB_TOKEN is not None:
-    GITHUB_HEADERS = {
-        **GITHUB_HEADERS,
-        'Authorization': f'Bearer {GITHUB_TOKEN}'
-    }
+if GITHUB_TOKEN is None:
+    GITHUB_HEADERS = BASE_HEADERS
+else:
+    GITHUB_HEADERS = BASE_HEADERS | {'Authorization': f'Bearer {GITHUB_TOKEN}'}
+
 
 def fetch_github(user, repo):
     r = requests.get(f'https://api.github.com/repos/{user}/{repo}/languages', headers=GITHUB_HEADERS)
@@ -48,35 +49,33 @@ def fetch_gitlab(user, repo):
     return m[0]
 
 
-def get_lang(user, url):
+def get_lang(url):
+    to_attempt = ['protohackers', 'protohacker', 'protohack']
     if url.startswith('https://github.com/'):
-        url_cut = url[len('https://github.com/'):]
-        a = url_cut.split('/')
+        a = url[len('https://github.com/'):].split('/')
         if len(a) == 2 and a[1]:
-            return fetch_github(a[0], a[1])
-        if len(a) == 1 or not a[1]:
-            return (
-                fetch_github(a[0], 'protohackers') or
-                fetch_github(a[0], 'protohacker') or
-                fetch_github(a[0], 'protohack')
-            )
+            to_attempt = [a[1], *to_attempt]
+        return next((u for u in (
+            fetch_github(a[0], w) for w in to_attempt
+        ) if u), None)
     elif url.startswith('https://gitlab.com/'):
-        url_cut = url[len('https://gitlab.com/'):]
-        a = url_cut.split('/')
+        a = url[len('https://gitlab.com/'):].split('/')
         if len(a) == 2 and a[1]:
-            return fetch_gitlab(a[0], a[1])
-        if len(a) == 1 or not a[1]:
-            return (
-                fetch_gitlab(a[0], 'protohackers') or
-                fetch_gitlab(a[0], 'protohacker') or
-                fetch_gitlab(a[0], 'protohack')
-            )
+            to_attempt = [a[1], *to_attempt]
+        return next((u for u in (
+            fetch_gitlab(a[0], w) for w in to_attempt
+        ) if u), None)
+
+
+def get_problem_ids():
+    j = requests.get('https://api.protohackers.com/problems', headers=BASE_HEADERS).json()
+    return (p['id'] for p in j['problems'])
 
 
 def main():
     d = [
         requests.get(f'https://api.protohackers.com/leaderboard/{n}', headers=BASE_HEADERS).json()
-        for n in range(3)
+        for n in get_problem_ids()
     ]
 
     x = reduce(operator.or_, ({
@@ -86,7 +85,7 @@ def main():
         } for n in d), {}
     )
 
-    L = Counter(filter(None, (get_lang(u, v) for u, v in x.items())))
+    L = Counter(filter(None, (get_lang(u) for u in x.values())))
 
     plt.pie(L.values(), labels=[u + ": " + str(v) for u, v in L.items()])
     plt.savefig('pie.png')
