@@ -4,6 +4,7 @@
 
 import requests
 import operator
+import json
 import os
 from functools import reduce
 from collections import Counter
@@ -87,7 +88,10 @@ def main():
 
     L = Counter(filter(None, (get_lang(u) for u in x.values())))
 
-    plt.pie(L.values(), labels=[u + ": " + str(v) for u, v in L.items()])
+    with open('colors.json') as f:
+        colors = json.load(f)
+
+    plt.pie(L.values(), labels=[u + ": " + str(v) for u, v in L.items()], colors=[colors[l] for l in L.keys()])
     plt.savefig('pie.png')
 
 
