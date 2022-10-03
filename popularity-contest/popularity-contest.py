@@ -35,19 +35,25 @@ else:
 
 
 def fetch_github(user, repo):
-    r = requests.get(f'https://api.github.com/repos/{user}/{repo}/languages', headers=GITHUB_HEADERS)
-    if not r:
+    try:
+        r = requests.get(f'https://api.github.com/repos/{user}/{repo}/languages', headers=GITHUB_HEADERS)
+        if not r:
+            return None
+        m = max(r.json().items(), key=lambda u: u[1])
+        return m[0]
+    except (ValueError, requests.ConnectionError):
         return None
-    m = max(r.json().items(), key=lambda u: u[1])
-    return m[0]
 
 
 def fetch_gitlab(user, repo):
-    r = requests.get(f'https://gitlab.com/api/v4/projects/{user}%2f{repo}/languages', headers=BASE_HEADERS)
-    if not r:
+    try:
+        r = requests.get(f'https://gitlab.com/api/v4/projects/{user}%2f{repo}/languages', headers=BASE_HEADERS)
+        if not r:
+            return None
+        m = max(r.json().items(), key=lambda u: u[1])
+        return m[0]
+    except (ValueError, requests.ConnectionError):
         return None
-    m = max(r.json().items(), key=lambda u: u[1])
-    return m[0]
 
 
 def get_lang(url):
