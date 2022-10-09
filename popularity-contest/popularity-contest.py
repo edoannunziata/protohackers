@@ -1,5 +1,5 @@
 # Let's see what other users are up to :-)
-# This script uses the Github, Gitlab and protohackers APIs to fetch
+# This script uses the Github, Gitlab, Codeberg and protohackers APIs to fetch
 # how many users used each language.
 
 import requests
@@ -56,6 +56,16 @@ def fetch_gitlab(user, repo):
         return None
 
 
+def fetch_codeberg(user, repo):
+    try:
+        r = requests.get(f"https://codeberg.org/api/v1/repos/{user}/{repo}/languages", headers=BASE_HEADERS)
+        if not r:
+            return None
+        m = max(r.json().items(), key=lambda u: u[1])
+        return m[0]
+    except (ValueError, requests.ConnectionError):
+        return None
+
 def get_lang(url):
     to_attempt = ['protohackers', 'protohacker', 'protohack']
     if url.startswith('https://github.com/'):
@@ -72,6 +82,14 @@ def get_lang(url):
         return next((u for u in (
             fetch_gitlab(a[0], w) for w in to_attempt
         ) if u), None)
+    elif url.startswith('https://codeberg.org/'):
+        a = url[len('https://codeberg.org/'):].split('/')
+        if len(a) == 2 and a[1]:
+            to_attempt = [a[1], *to_attempt]
+        return next((u for u in (
+            fetch_codeberg(a[0], w) for w in to_attempt
+        ) if u), None)
+
 
 
 def get_problem_ids():
